@@ -46,28 +46,24 @@ class BaseSolution():
 
         Translate the lists of steps and their constraints into timepoints and links between them.
         """
-        not_relevant = ["<http://www.w3.org/2002/07/owl#Thing>", "<http://www.w3.org/2002/07/owl#Resource>"]
-        action_class = ["<http://onto-server-tuni.herokuapp.com/Panda#ManipulationTask>", "<http://onto-server-tuni.herokuapp.com/Panda#Event>"]
-        object_class = ["<http://onto-server-tuni.herokuapp.com/Panda#Object>"]
-        for triple_a in sem_collection.list_triples:
-            if triple_a.predicate=="<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>" and triple_a.object in action_class:
-                action_type = [triple_b for triple_b in sem_collection.list_triples if triple_a.subject == triple_b.subject]
-            if triple_a.predicate=="<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>" and triple_a.object in object_class:
-                object_type = [triple_b for triple_b in sem_collection.list_triples if triple_a.subject == triple_b.subject]
-            break
-        self.add_event(action_type, object_type)
+        for triple in sem_collection:
+            self.add_event(triple[0], triple[2])
 
     def timepoints(self):
         """Get the timepoints of the network."""
         return [task for task in self._graph.nodes(data=True) if not task[0] == "Start"]
 
-    def update_after_completion(self, event, time):
-        self._graph.nodes[event]['is_done'] = True
+    def update_after_completion(self, task, time):
+        self._graph.nodes[task]['is_done'] = True
 
 
     def find_available_steps(self, current_time):
         """Get the available events in the network."""
-        return [(step, data['object']) for step, data in self._graph.nodes.data() if not data['is_done']]
+        steps = []
+        for task, data in self._graph.nodes.data():
+            if not data['is_done']:
+                steps.append((task, data['object']))
+        return steps
 
     def find_predecessor_graph(self):
         pass
@@ -84,6 +80,7 @@ class BaseSolution():
 
     def add_event(self, action, object, is_done=False):
         """Create a new node in the graph."""
+        print("add event")
         id = nx.number_of_nodes(self._graph)+1
         self._graph.add_node(action, object=object, is_done=is_done, is_claimed=False)
         return id

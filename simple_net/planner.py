@@ -19,7 +19,6 @@ class Planner(object):
         """ Model a temporal plan """
         try:
             self.base_solution.model_temporal_problem(sem_collection)
-            self.print_plan()
             self.base_solution.relax_network()
             self.base_solution.transform_dispatchable_graph()
             return self.base_solution
